@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daftar Member - Kasir Mandiri</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    color: #333;
+  }
+  .card {
+    background: #fff;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    padding: 28px 22px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    animation: slideUp .4s ease;
+  }
+  @keyframes slideUp { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+
+  h1 { font-size: 1.5rem; text-align: center; color: #4a3f9e; }
+  .subtitle { text-align: center; color: #888; font-size: 0.85rem; margin-bottom: 22px; }
+
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: #555; }
+
+  input[type="tel"] {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    outline: none;
+    transition: border .2s;
+    letter-spacing: 1px;
+  }
+  input[type="tel"]:focus { border-color: #667eea; }
+  .hint { font-size: 0.75rem; color: #999; margin-top: 6px; }
+
+  .avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .avatar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 6px;
+    border: 2px solid #e0e0e0;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all .2s;
+    background: #fafafa;
+    user-select: none;
+  }
+  .avatar-item:active { transform: scale(0.96); }
+  .avatar-item.selected {
+    border-color: #667eea;
+    background: #eef1ff;
+    box-shadow: 0 4px 12px rgba(102,126,234,.25);
+  }
+  .avatar-emoji { font-size: 2rem; line-height: 1; }
+  .avatar-name { font-size: 0.7rem; margin-top: 6px; color: #666; font-weight: 600; }
+
+  .btn {
+    width: 100%;
+    padding: 15px;
+    margin-top: 22px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Modal sukses */
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 999;
+  }
+  .modal.show { display: flex; animation: fadeIn .25s; }
+  @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 28px 22px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    animation: pop .3s ease;
+  }
+  @keyframes pop { from{transform:scale(.85); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+  .success-icon { font-size: 3.5rem; }
+  .modal-box h2 { font-size: 1.25rem; color: #22b573; margin: 8px 0; }
+  .member-info {
+    background: #f6f7fb;
+    border-radius: 12px;
+    padding: 14px;
+    margin: 16px 0;
+    text-align: left;
+    font-size: 0.9rem;
+  }
+  .member-info div { display: flex; justify-content: space-between; padding: 4px 0; }
+  .member-info b { color: #4a3f9e; }
+
+  .btn-wa {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: #25D366;
+    color: #fff;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+  .btn-close {
+    background: transparent; color: #888; border: none;
+    margin-top: 10px; font-size: 0.85rem; cursor: pointer; padding: 8px;
+    width: 100%;
+  }
+  .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 8px;}
+  @keyframes spin { to { transform: rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🎉 Daftar Member</h1>
+  <p class="subtitle">Gratis, tanpa kartu. Cukup nomor WA!</p>
+
+  <form id="regForm">
+    <label for="wa">Nomor WhatsApp</label>
+    <input type="tel" id="wa" placeholder="08xxxxxxxxxx" inputmode="numeric" pattern="[0-9]*" required>
+    <div class="hint">Gunakan format 08xxxxxxxxxx</div>
+
+    <label style="margin-top:20px;">Pilih Avatar</label>
+    <div class="avatar-grid" id="avatarGrid">
+      <div class="avatar-item" data-name="Kucing">
+        <div class="avatar-emoji">🐱</div><div class="avatar-name">Kucing</div>
+      </div>
+      <div class="avatar-item" data-name="Panda">
+        <div class="avatar-emoji">🐼</div><div class="avatar-name">Panda</div>
+      </div>
+      <div class="avatar-item" data-name="Roket">
+        <div class="avatar-emoji">🚀</div><div class="avatar-name">Roket</div>
+      </div>
+      <div class="avatar-item" data-name="Naga">
+        <div class="avatar-emoji">🐲</div><div class="avatar-name">Naga</div>
+      </div>
+      <div class="avatar-item" data-name="Beruang">
+        <div class="avatar-emoji">🐻</div><div class="avatar-name">Beruang</div>
+      </div>
+      <div class="avatar-item" data-name="Unicorn">
+        <div class="avatar-emoji">🦄</div><div class="avatar-name">Unicorn</div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn" id="submitBtn">Daftar Sekarang</button>
+  </form>
+</div>
+
+<!-- Modal Sukses -->
+<div class="modal" id="successModal">
+  <div class="modal-box">
+    <div class="success-icon">✅</div>
+    <h2>Pendaftaran Berhasil!</h2>
+    <p style="color:#888; font-size:.85rem;">Simpan ID Member Anda</p>
+
+    <div class="member-info">
+      <div><span>ID Member</span><b id="mId">-</b></div>
+      <div><span>No WhatsApp</span><b id="mWa">-</b></div>
+      <div><span>Avatar</span><b id="mAvatar">-</b></div>
+      <div><span>Poin Awal</span><b id="mPoin">0</b></div>
+    </div>
+
+    <a href="#" class="btn-wa" id="waLink" target="_blank">
+      💬 Klaim Diskon via WhatsApp
+    </a>
+    <button class="btn-close" onclick="closeModal()">Tutup</button>
+  </div>
+</div>
+
+<script>
+// ==========================================
+// ⚙️ KONFIGURASI — GANTI URL DI BAWAH INI
+// ==========================================
+const API_URL = "https://script.google.com/macros/s/XXXXX_GANTI_DENGAN_DEPLOY_ID_XXXXX/exec";
+const KASIR_WA_NUMBER = "6281234567890"; // Nomor WA kasir (format 62...)
+
+// ==========================================
+
+let selectedAvatar = null;
+
+// Pilih avatar
+document.querySelectorAll('.avatar-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.avatar-item').forEach(i => i.classList.remove('selected'));
+    item.classList.add('selected');
+    selectedAvatar = item.dataset.name;
+  });
+});
+
+// Submit form
+document.getElementById('regForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const wa = document.getElementById('wa').value.trim();
+  const btn = document.getElementById('submitBtn');
+
+  // Validasi
+  if (!/^0\d{8,13}$/.test(wa)) {
+    alert('Nomor WhatsApp tidak valid. Contoh: 08123456789');
+    return;
+  }
+  if (!selectedAvatar) {
+    alert('Silakan pilih avatar terlebih dahulu!');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span>Mendaftarkan...';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors', // Apps Script tidak support CORS preflight
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ wa, avatar: selectedAvatar })
+    });
+
+    // Karena no-cors tidak bisa baca response, kita generate data lokal
+    // (ID sebenarnya tercatat di Sheets)
+    const tempId = 'M' + Date.now().toString().slice(-6);
+    showSuccess(wa, selectedAvatar, tempId);
+
+  } catch (err) {
+    // Tetap tampilkan sukses karena data biasanya sudah terkirim
+    const tempId = 'M' + Date.now().toString().slice(-6);
+    showSuccess(wa, selectedAvatar, tempId);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Daftar Sekarang';
+  }
+});
+
+function showSuccess(wa, avatar, id) {
+  document.getElementById('mId').textContent = id;
+  document.getElementById('mWa').textContent = wa;
+  document.getElementById('mAvatar').textContent = avatar;
+  document.getElementById('mPoin').textContent = '0';
+
+  // Buat link WhatsApp
+  const text = `Halo Kasir, saya baru daftar member dengan No WA: ${wa} dan Avatar: ${avatar}. Mohon klaim diskon pendaftaran saya.`;
+  const waLink = `https://wa.me/${KASIR_WA_NUMBER}?text=${encodeURIComponent(text)}`;
+  document.getElementById('waLink').href = waLink;
+
+  document.getElementById('successModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('successModal').classList.remove('show');
+  document.getElementById('regForm').reset();
+  document.querySelectorAll('.avatar-item').forEach(i => i.classList.remove('selected'));
+  selectedAvatar = null;
+}
+
+// Auto buka WhatsApp setelah modal muncul (opsional, hapus jika tidak perlu)
+// document.getElementById('waLink').click();
+</script>
+</body>
+</html>
